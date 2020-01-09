@@ -1,9 +1,12 @@
 package ru.pavel_zhukoff;
 
 import com.sun.net.httpserver.HttpServer;
+import org.reflections.Reflections;
+import ru.pavel_zhukoff.annotations.Controller;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Set;
 
 public class Server {
 
@@ -23,17 +26,31 @@ public class Server {
 
     public void run() throws IOException {
         server.bind(new InetSocketAddress(80), 0);
-        loadControllers();
-        server.start();
+        try {
+            loadControllers();
+            server.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void run(int port) throws IOException {
         server.bind(new InetSocketAddress(port), 0);
-        loadControllers();
-        server.start();
+        try {
+            loadControllers();
+            server.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private void loadControllers() {
+    private void loadControllers() throws Exception {
 
+        Reflections refs = new Reflections("ru.pavel_zhukoff.controllers");
+        Set<Class<?>> controllers = refs.getTypesAnnotatedWith(Controller.class);
+        for (Class<?> controller: controllers) {
+            server.createContext(controller.getAnnotation(Controller.class).baseUrl(),
+                    new ru.pavel_zhukoff.Controller(controller));
+        }
     }
 }
