@@ -1,6 +1,6 @@
-package ru.pavel_zhukoff.enums;
+package ru.pavel_zhukoff.request;
 
-public enum RequestType {
+public enum RequestMethod {
     GET("GET"),
     POST("POST"),
     DELETE("DELETE"),
@@ -8,7 +8,7 @@ public enum RequestType {
 
     private String name;
 
-    RequestType(String name) {
+    RequestMethod(String name) {
         this.name = name;
     }
 

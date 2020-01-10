@@ -27,6 +27,7 @@ public class Server {
 
     public void run() throws IOException {
         server.bind(new InetSocketAddress(80), 0);
+        server.setExecutor(null);
         try {
             loadControllers();
             server.start();
@@ -37,6 +38,7 @@ public class Server {
 
     public void run(int port) throws IOException {
         server.bind(new InetSocketAddress(port), 0);
+        server.setExecutor(null);
         try {
             loadControllers();
             server.start();
@@ -47,7 +49,7 @@ public class Server {
 
     private void loadControllers() throws Exception {
 
-        Reflections refs = new Reflections("ru.pavel_zhukoff.controllers");
+        Reflections refs = new Reflections("ru.pavel_zhukoff.controller"); // TODO: Закинуть это в настройки
         Set<Class<?>> controllers = refs.getTypesAnnotatedWith(Controller.class);
         for (Class<?> controller: controllers) {
             server.createContext(controller.getAnnotation(Controller.class).baseUrl(),
