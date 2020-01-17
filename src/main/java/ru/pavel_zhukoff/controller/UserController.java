@@ -3,6 +3,7 @@ package ru.pavel_zhukoff.controller;
 import ru.pavel_zhukoff.Page;
 import ru.pavel_zhukoff.annotations.Controller;
 import ru.pavel_zhukoff.annotations.RequestMapping;
+import ru.pavel_zhukoff.annotations.RequestParam;
 import ru.pavel_zhukoff.request.RequestMethod;
 
 @Controller(baseUrl = "/user")
@@ -13,8 +14,11 @@ public class UserController {
         return new Page("<h1>Hello, User!</h1>");
     }
 
-    @RequestMapping(uri = "/register")
-    public Page register() {
+    @RequestMapping(uri = "/register") // /user/register?a=b&s=12
+    public Page register(@RequestParam(name = "a") String a, @RequestParam(name = "s") Integer number) {
+        System.out.println(a);
+        System.out.println(number);
+
         return new Page("<h1>Hello, User! It's REGISTRATION</h1>");
     }
 

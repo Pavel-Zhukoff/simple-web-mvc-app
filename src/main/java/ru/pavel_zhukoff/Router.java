@@ -5,23 +5,25 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import ru.pavel_zhukoff.annotations.RequestMapping;
+import ru.pavel_zhukoff.annotations.RequestParam;
 import ru.pavel_zhukoff.request.RequestMethod;
 import ru.pavel_zhukoff.request.RequestParams;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Controller implements HttpHandler {
+public class Router implements HttpHandler {
 
     private Class<?> controllerClass;
     private HttpExchange httpExchange;
     private String baseUrl;
 
-    public Controller(Class<?> controllerClass) {
+    public Router(Class<?> controllerClass) {
         this.controllerClass = controllerClass;
         baseUrl = controllerClass.getAnnotation(ru.pavel_zhukoff.annotations.Controller.class).baseUrl();
     }
@@ -29,6 +31,7 @@ public class Controller implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         httpExchange = exchange;
+        printConnection();
         String requestUri = httpExchange.getRequestURI().getPath();
         Map<String, Method> actions = new HashMap<>();
         for (Method action: controllerClass.getDeclaredMethods()) {
@@ -52,9 +55,19 @@ public class Controller implements HttpHandler {
                                         .newInstance(null),
                                 null);
                     } else {
-                        page = invokeParametrizedMethod(action);
+                        String query;
+                        if (httpExchange.getRequestMethod().equals(RequestMethod.GET.name())) {
+                            query = httpExchange.getRequestURI().getRawQuery();
+                        } else {
+                            Scanner s = new Scanner(httpExchange.getRequestBody()).useDelimiter("\\A");
+                            query = s.hasNext() ? s.next() : "";
+                        }
+                        page = invokeParametrizedMethod(action,
+                                query,
+                                httpExchange.getRequestMethod());
                     }
                 } catch (IllegalAccessException
+                        | IllegalArgumentException
                         | InvocationTargetException
                         | InstantiationException
                         | NoSuchMethodException e) {
@@ -71,35 +84,47 @@ public class Controller implements HttpHandler {
             }
         httpExchange.getResponseBody().close();
     }
+// ПЕРЕДЕЛАТЬ ЭТО ДЛЯ КЛАССОВ
 
-    private Page invokeParametrizedMethod(Method method) {
+    private Page invokeParametrizedMethod(Method method,
+                                          String query,
+                                          String requestMethod) throws IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+
         Page page = null;
         List<Object> args = new ArrayList<>();
-        String query;
-        if (httpExchange.getRequestMethod().equals(RequestMethod.GET.name())) {
-            query = httpExchange.getRequestURI().getRawQuery();
-        } else {
-            Scanner s = new Scanner(httpExchange.getRequestBody()).useDelimiter("\\A");
-            query = s.hasNext() ? s.next() : "";
-        }
-        // Get the first entry in List of 1 element and then get the first value of entrySet value
-        String header = httpExchange
-                .getRequestHeaders()
-                .entrySet()
-                .stream()
-                .filter(entry -> entry.getKey().equals("Content-type"))
-                .collect(Collectors.toList())
-                .get(0).getValue().get(0);
-        List<List<Object>> params = RequestParams.parse(query, httpExchange.getRequestMethod(), header);
+        Map<String, List<Object>> aargs = new HashMap<>();
+        String contentType = httpExchange.getRequestHeaders().containsKey("Content-type")?
+                httpExchange.getRequestHeaders().get("Content-type").get(0):
+                "";
+        List<List<Object>> params = RequestParams.parse(query, requestMethod, contentType);
         if (params == null) {
-            throw new Exception("Params not found!");
+            throw new IllegalArgumentException("Params not found!");
         }
         for (List<Object> arg: params) {
             String key = String.valueOf(arg.get(0));
             Object value = arg.get(1);
-            // TODO: Пересмотреть подход, потому что непонятно ничего
+            if (!aargs.containsKey(key)) {
+                aargs.put(key, new ArrayList<>());
+            }
+            aargs.get(key).add(value);
         }
+        for (Parameter param: method.getParameters()) {
+            if (param.isAnnotationPresent(RequestParam.class)) {
+                String argName = param.getAnnotation(RequestParam.class).name();
+                if (aargs.containsKey(argName)) {
+                    if (aargs.get(argName).size() > 1) {
+                        args.add(aargs.get(argName));
+                    } else {
 
+                        args.add(aargs.get(argName).get(0));
+                    }
+                } else if (!param.getAnnotation(RequestParam.class).required()) {
+                    args.add(null);
+                } else {
+                    throw new IllegalArgumentException(String.format("Argument %s is required!", argName));
+                }
+            }
+        }
         try {
             page = (Page) method.invoke(controllerClass
                             .getConstructor(null)
@@ -114,7 +139,7 @@ public class Controller implements HttpHandler {
         return page;
     }
 
-    private void printConnection(HttpExchange httpExchange) {
+    private void printConnection() {
         StringBuilder sb = new StringBuilder();
         sb.append('\n').append(new Date()).append(" --- ");
         sb.append(httpExchange.getRequestMethod()).append(" --- ").append(httpExchange.getRequestURI());

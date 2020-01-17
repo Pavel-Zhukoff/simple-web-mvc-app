@@ -12,6 +12,9 @@ public class QueryAdapter implements RequestParserAdapter {
     @Override
     public List<List<Object>> parse(String query) {
         List<List<Object>> params = new ArrayList<>();
+        if (query == null) {
+            return params;
+        }
         String[] parts = query.split("[&]");
         for (String part: parts) {
             String[] param = part.split("[=]");

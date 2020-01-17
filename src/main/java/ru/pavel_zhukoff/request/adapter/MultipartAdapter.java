@@ -14,6 +14,9 @@ public class MultipartAdapter implements RequestParserAdapter {
     @Override
     public List<List<Object>> parse(String query) {
         List<List<Object>> params = new ArrayList<>();
+        if (query == null) {
+            return params;
+        }
         String[] parts = query.split("------WebKitFormBoundary");
         for (int i = 0; i < parts.length-1; i++) {
             Pattern keyPattern = Pattern.compile("name=\"(.*)\"\n");

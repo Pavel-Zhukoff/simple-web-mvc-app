@@ -7,7 +7,6 @@ import ru.pavel_zhukoff.annotations.Controller;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Set;
-import java.util.concurrent.Executor;
 
 public class Server {
 
@@ -53,7 +52,7 @@ public class Server {
         Set<Class<?>> controllers = refs.getTypesAnnotatedWith(Controller.class);
         for (Class<?> controller: controllers) {
             server.createContext(controller.getAnnotation(Controller.class).baseUrl(),
-                    new ru.pavel_zhukoff.Controller(controller));
+                    new Router(controller));
         }
     }
 }
