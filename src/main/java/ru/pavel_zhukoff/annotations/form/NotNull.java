@@ -1,13 +1,11 @@
-package ru.pavel_zhukoff.annotations;
+package ru.pavel_zhukoff.annotations.form;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.PARAMETER)
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RequestParam {
-    String name() default "";
-    boolean required() default false;
+public @interface NotNull {
 }

@@ -4,6 +4,7 @@ import ru.pavel_zhukoff.Page;
 import ru.pavel_zhukoff.annotations.Controller;
 import ru.pavel_zhukoff.annotations.RequestMapping;
 import ru.pavel_zhukoff.annotations.RequestParam;
+import ru.pavel_zhukoff.forms.UserForm;
 import ru.pavel_zhukoff.request.RequestMethod;
 
 @Controller(baseUrl = "/user")
@@ -15,9 +16,8 @@ public class UserController {
     }
 
     @RequestMapping(uri = "/register") // /user/register?a=b&s=12
-    public Page register(@RequestParam(name = "a") String a, @RequestParam(name = "s") Integer number) {
-        System.out.println(a);
-        System.out.println(number);
+    public Page register(@RequestParam UserForm user) {
+        System.out.println(user);
 
         return new Page("<h1>Hello, User! It's REGISTRATION</h1>");
     }

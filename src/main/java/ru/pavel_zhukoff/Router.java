@@ -6,16 +6,15 @@ import com.sun.net.httpserver.HttpHandler;
 
 import ru.pavel_zhukoff.annotations.RequestMapping;
 import ru.pavel_zhukoff.annotations.RequestParam;
+import ru.pavel_zhukoff.request.ParamFactory;
 import ru.pavel_zhukoff.request.RequestMethod;
 import ru.pavel_zhukoff.request.RequestParams;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Router implements HttpHandler {
 
@@ -55,16 +54,7 @@ public class Router implements HttpHandler {
                                         .newInstance(null),
                                 null);
                     } else {
-                        String query;
-                        if (httpExchange.getRequestMethod().equals(RequestMethod.GET.name())) {
-                            query = httpExchange.getRequestURI().getRawQuery();
-                        } else {
-                            Scanner s = new Scanner(httpExchange.getRequestBody()).useDelimiter("\\A");
-                            query = s.hasNext() ? s.next() : "";
-                        }
-                        page = invokeParametrizedMethod(action,
-                                query,
-                                httpExchange.getRequestMethod());
+                        page = invokeParametrizedMethod(action);
                     }
                 } catch (IllegalAccessException
                         | IllegalArgumentException
@@ -86,16 +76,25 @@ public class Router implements HttpHandler {
     }
 // ПЕРЕДЕЛАТЬ ЭТО ДЛЯ КЛАССОВ
 
-    private Page invokeParametrizedMethod(Method method,
-                                          String query,
-                                          String requestMethod) throws IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-
+    private Page invokeParametrizedMethod(Method method) throws IllegalArgumentException
+                                                                , NoSuchMethodException
+                                                                , IllegalAccessException
+                                                                , InvocationTargetException
+                                                                , InstantiationException {
         Page page = null;
         List<Object> args = new ArrayList<>();
-        Map<String, List<Object>> aargs = new HashMap<>();
+        Map<String, Object> paramsMap = new HashMap<>();
+        String requestMethod = httpExchange.getRequestMethod();
         String contentType = httpExchange.getRequestHeaders().containsKey("Content-type")?
                 httpExchange.getRequestHeaders().get("Content-type").get(0):
                 "";
+        String query;
+        if (requestMethod.equals(RequestMethod.GET.name())) {
+            query = httpExchange.getRequestURI().getRawQuery();
+        } else {
+            Scanner s = new Scanner(httpExchange.getRequestBody()).useDelimiter("\\A");
+            query = s.hasNext() ? s.next() : "";
+        }
         List<List<Object>> params = RequestParams.parse(query, requestMethod, contentType);
         if (params == null) {
             throw new IllegalArgumentException("Params not found!");
@@ -103,39 +102,27 @@ public class Router implements HttpHandler {
         for (List<Object> arg: params) {
             String key = String.valueOf(arg.get(0));
             Object value = arg.get(1);
-            if (!aargs.containsKey(key)) {
-                aargs.put(key, new ArrayList<>());
+            if (!paramsMap.containsKey(key)) {
+                paramsMap.put(key, value);
+            } else if (paramsMap.containsKey(key) && paramsMap.get(key) instanceof List<?>) {
+                ((List<Object>) paramsMap.get(key)).add(value);
+            } else {
+                Object buff = paramsMap.get(key);
+                List<Object> array = new ArrayList<>();
+                array.add(buff);
+                array.add(value);
+                paramsMap.put(key, array);
             }
-            aargs.get(key).add(value);
         }
-        for (Parameter param: method.getParameters()) {
-            if (param.isAnnotationPresent(RequestParam.class)) {
-                String argName = param.getAnnotation(RequestParam.class).name();
-                if (aargs.containsKey(argName)) {
-                    if (aargs.get(argName).size() > 1) {
-                        args.add(aargs.get(argName));
-                    } else {
+        System.out.println(1);
+        ParamFactory paramFactory = new ParamFactory(method, paramsMap);
+        Object[] args1 = paramFactory.getParsedArgs();
 
-                        args.add(aargs.get(argName).get(0));
-                    }
-                } else if (!param.getAnnotation(RequestParam.class).required()) {
-                    args.add(null);
-                } else {
-                    throw new IllegalArgumentException(String.format("Argument %s is required!", argName));
-                }
-            }
-        }
-        try {
-            page = (Page) method.invoke(controllerClass
-                            .getConstructor(null)
-                            .newInstance(null),
-                    args.toArray());
-        } catch (IllegalAccessException
-                | InvocationTargetException
-                | InstantiationException
-                | NoSuchMethodException e) {
-            e.printStackTrace();
-        }
+        System.out.println(Arrays.toString(args1));
+        page = (Page) method.invoke(controllerClass
+                        .getConstructor(null)
+                        .newInstance(null),
+                args1);
         return page;
     }
 
