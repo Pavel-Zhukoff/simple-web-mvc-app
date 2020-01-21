@@ -17,13 +17,17 @@ public class UserController {
 
     @RequestMapping(uri = "/register") // /user/register?a=b&s=12
     public Page register(@RequestParam UserForm user) {
+        System.out.println("IN CONTROLLER");
         System.out.println(user);
 
-        return new Page("<h1>Hello, User! It's REGISTRATION</h1>");
+        return new Page(user.toString());
     }
 
     @RequestMapping(uri = "/register", requsetType = RequestMethod.POST)
-    public Page registerPost() {
-        return new Page("<h1>Hello, User! It's REGISTRATION</h1>");
+    public Page registerPost(@RequestParam UserForm user) {
+        System.out.println("IN CONTROLLER");
+        System.out.println(user);
+
+        return new Page(user.toString());
     }
 }

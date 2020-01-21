@@ -114,11 +114,8 @@ public class Router implements HttpHandler {
                 paramsMap.put(key, array);
             }
         }
-        System.out.println(1);
         ParamFactory paramFactory = new ParamFactory(method, paramsMap);
         Object[] args1 = paramFactory.getParsedArgs();
-
-        System.out.println(Arrays.toString(args1));
         page = (Page) method.invoke(controllerClass
                         .getConstructor(null)
                         .newInstance(null),

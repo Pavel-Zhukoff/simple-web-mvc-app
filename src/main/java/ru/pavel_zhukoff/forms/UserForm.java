@@ -8,15 +8,11 @@ public class UserForm {
     @FormItem
     String name;
 
-    @FormItem
+    @FormItem(name = "a")
     @NotNull
     int age;
 
     String some;
-
-    public UserForm() {
-
-    }
 
     @Override
     public String toString() {

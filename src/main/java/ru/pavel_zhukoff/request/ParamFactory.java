@@ -5,14 +5,8 @@ import ru.pavel_zhukoff.annotations.form.FormItem;
 import ru.pavel_zhukoff.annotations.form.NotNull;
 import ru.pavel_zhukoff.exceptions.NoSuchNotNullParameter;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.*;
+import java.util.*;
 
 public class ParamFactory {
 
@@ -31,9 +25,7 @@ public class ParamFactory {
     public Object[] getParsedArgs() {
         List<Object> args = new ArrayList<>(method.getParameterCount());
         getMethodArgs();
-        System.out.println(classes);
         for (Map.Entry<String, Class<?>> entry: classes.entrySet()) {
-            System.out.println(entry.getKey());
             try {
                 args.add(buildArgumentObject(entry.getValue()));
             } catch (NoSuchMethodException
@@ -47,15 +39,9 @@ public class ParamFactory {
         return args.toArray();
     }
 
-    // НЕ ПАШЕТ
     private void getMethodArgs() {
         for (Parameter param: method.getParameters()) {
-            String key = param.getName();
-            System.out.println();
-            if (!param.getAnnotation(RequestParam.class).name().isEmpty()) {
-                key = param.getAnnotation(RequestParam.class).name();
-            }
-            classes.put(key, param.getType());
+            classes.put(param.getName(), param.getType());
         }
     }
 
@@ -64,15 +50,17 @@ public class ParamFactory {
             , InvocationTargetException
             , InstantiationException
             , NoSuchNotNullParameter {
-        Object obj = clazz.getConstructor(clazz).newInstance(null);
-        for (Field field: clazz.getFields()) {
+        Object obj = clazz.getConstructor(null).newInstance(null);
+        System.out.println(Arrays.toString(clazz.getDeclaredFields()));
+        for (Field field: clazz.getDeclaredFields()) {
+            System.out.println(field.getType().getTypeName());
             if (field.isAnnotationPresent(FormItem.class)) {
                 String fieldName = field.getAnnotation(FormItem.class).name().isEmpty()
-                        ?
-                        field.getName():field.getAnnotation(FormItem.class).name();
+                        ? field.getName() : field.getAnnotation(FormItem.class).name();
                 field.setAccessible(true);
+
                 if (params.containsKey(fieldName)){
-                    field.set(obj, params.get(fieldName));
+                    field.set(obj, ValueParser.parseValue(field.getType().getTypeName(), params.get(fieldName)));
                 } else {
                     if (field.isAnnotationPresent(NotNull.class)) {
                       throw new NoSuchNotNullParameter("Параметр "
@@ -85,6 +73,6 @@ public class ParamFactory {
             }
 
         }
-        return new Object();
+        return obj;
     }
 }
