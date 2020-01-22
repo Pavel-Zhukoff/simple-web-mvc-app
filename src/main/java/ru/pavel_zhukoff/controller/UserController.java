@@ -15,7 +15,7 @@ public class UserController {
         return new Page("<h1>Hello, User!</h1>");
     }
 
-    @RequestMapping(uri = "/register") // /user/register?a=b&s=12
+    @RequestMapping(uri = "/register")
     public Page register(@RequestParam UserForm user) {
         System.out.println("IN CONTROLLER");
         System.out.println(user);

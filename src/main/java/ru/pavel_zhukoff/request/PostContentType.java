@@ -17,6 +17,10 @@ public enum PostContentType {
         this.adapter = adapter;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public RequestParserAdapter getAdapter() {
         return adapter;
     }

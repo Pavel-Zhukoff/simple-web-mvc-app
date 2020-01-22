@@ -12,7 +12,7 @@ public class RequestParams {
             return rpa.parse(query);
         } else {
             for (PostContentType pct: PostContentType.values()) {
-                if (pct.name().equals(contentType)) {
+                if (pct.getName().equals(contentType)) {
                     return pct.getAdapter().parse(query);
                 }
             }

@@ -4,6 +4,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import org.apache.commons.io.IOUtils;
 import ru.pavel_zhukoff.annotations.RequestMapping;
 import ru.pavel_zhukoff.annotations.RequestParam;
 import ru.pavel_zhukoff.request.ParamFactory;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.*;
 
 public class Router implements HttpHandler {
@@ -30,7 +32,7 @@ public class Router implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         httpExchange = exchange;
-        printConnection();
+        //printConnection();
         String requestUri = httpExchange.getRequestURI().getPath();
         Map<String, Method> actions = new HashMap<>();
         for (Method action: controllerClass.getDeclaredMethods()) {
@@ -88,12 +90,15 @@ public class Router implements HttpHandler {
         String contentType = httpExchange.getRequestHeaders().containsKey("Content-type")?
                 httpExchange.getRequestHeaders().get("Content-type").get(0):
                 "";
-        String query;
+        String query = "";
         if (requestMethod.equals(RequestMethod.GET.name())) {
             query = httpExchange.getRequestURI().getRawQuery();
         } else {
-            Scanner s = new Scanner(httpExchange.getRequestBody()).useDelimiter("\\A");
-            query = s.hasNext() ? s.next() : "";
+            try {
+                query = IOUtils.toString(httpExchange.getRequestBody(), Charset.defaultCharset());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         List<List<Object>> params = RequestParams.parse(query, requestMethod, contentType);
         if (params == null) {
@@ -142,8 +147,8 @@ public class Router implements HttpHandler {
         String query = requestURI.getQuery();
         System.out.println(query);
 
-        System.out.println("--- Requset Body ---");
-        Scanner s = new Scanner(httpExchange.getRequestBody()).useDelimiter("\\A");
-        System.out.println(s.hasNext() ? s.next() : "");
+        //System.out.println("--- Requset Body ---");
+        //Scanner s = new Scanner(httpExchange.getRequestBody()).useDelimiter("\\A");
+        //System.out.println(s.hasNext() ? s.next() : "");
     }
 }

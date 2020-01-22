@@ -51,25 +51,27 @@ public class ParamFactory {
             , InstantiationException
             , NoSuchNotNullParameter {
         Object obj = clazz.getConstructor(null).newInstance(null);
-        System.out.println(Arrays.toString(clazz.getDeclaredFields()));
         for (Field field: clazz.getDeclaredFields()) {
-            System.out.println(field.getType().getTypeName());
             if (field.isAnnotationPresent(FormItem.class)) {
                 String fieldName = field.getAnnotation(FormItem.class).name().isEmpty()
                         ? field.getName() : field.getAnnotation(FormItem.class).name();
                 field.setAccessible(true);
-
-                if (params.containsKey(fieldName)){
-                    field.set(obj, ValueParser.parseValue(field.getType().getTypeName(), params.get(fieldName)));
-                } else {
-                    if (field.isAnnotationPresent(NotNull.class)) {
-                      throw new NoSuchNotNullParameter("Параметр "
-                              + fieldName + " формы "
-                              + clazz.getName() + " не найден в запросе!");
+                if (!field.isAnnotationPresent(NotNull.class)) {
+                    if (params.containsKey(fieldName)) {
+                        field.set(obj, ValueParser.parseValue(field.getType().getTypeName(), params.get(fieldName)));
                     } else {
                         field.set(obj, null);
                     }
+                } else {
+                    if (params.containsKey(fieldName) && !params.get(fieldName).equals("")) {
+                        field.set(obj, ValueParser.parseValue(field.getType().getTypeName(), params.get(fieldName)));
+                    } else {
+                        throw new NoSuchNotNullParameter("Form: "
+                                + clazz.getName() + " parameter "
+                                + field.getName() + " not found in request!");
+                    }
                 }
+
             }
 
         }
