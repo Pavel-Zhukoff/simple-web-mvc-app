@@ -32,7 +32,7 @@ public class Router implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         httpExchange = exchange;
-        //printConnection();
+        printConnection();
         String requestUri = httpExchange.getRequestURI().getPath();
         Map<String, Method> actions = new HashMap<>();
         for (Method action: controllerClass.getDeclaredMethods()) {
@@ -76,7 +76,6 @@ public class Router implements HttpHandler {
             }
         httpExchange.getResponseBody().close();
     }
-// ПЕРЕДЕЛАТЬ ЭТО ДЛЯ КЛАССОВ
 
     private Page invokeParametrizedMethod(Method method) throws IllegalArgumentException
                                                                 , NoSuchMethodException
@@ -84,7 +83,6 @@ public class Router implements HttpHandler {
                                                                 , InvocationTargetException
                                                                 , InstantiationException {
         Page page = null;
-        List<Object> args = new ArrayList<>();
         Map<String, Object> paramsMap = new HashMap<>();
         String requestMethod = httpExchange.getRequestMethod();
         String contentType = httpExchange.getRequestHeaders().containsKey("Content-type")?
@@ -120,19 +118,18 @@ public class Router implements HttpHandler {
             }
         }
         ParamFactory paramFactory = new ParamFactory(method, paramsMap);
-        Object[] args1 = paramFactory.getParsedArgs();
+        Object[] args = paramFactory.getParsedArgs();
         page = (Page) method.invoke(controllerClass
                         .getConstructor(null)
                         .newInstance(null),
-                args1);
+                args);
         return page;
     }
 
     private void printConnection() {
-        StringBuilder sb = new StringBuilder();
-        sb.append('\n').append(new Date()).append(" --- ");
-        sb.append(httpExchange.getRequestMethod()).append(" --- ").append(httpExchange.getRequestURI());
-        System.out.println(sb.toString());
+        String sb = "\n" + new Date() + " --- " +
+                httpExchange.getRequestMethod() + " --- " + httpExchange.getRequestURI();
+        System.out.println(sb);
 
         System.out.println("--- Headers ---");
         Headers requestHeaders = httpExchange.getRequestHeaders();

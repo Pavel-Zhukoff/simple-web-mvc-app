@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// ПЕРЕДЕЛАТЬ РЕГУЛЯРКИ
+
 public class MultipartAdapter implements RequestParserAdapter {
 
     @Override

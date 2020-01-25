@@ -14,6 +14,7 @@ public class Server {
     private HttpServer server;
 
     private Server() throws IOException {
+        Config.loadConfig();
         server = HttpServer.create();
     }
 
@@ -26,29 +27,22 @@ public class Server {
 
     public void run() throws IOException {
         server.bind(new InetSocketAddress(80), 0);
-        server.setExecutor(null);
-        try {
-            loadControllers();
-            server.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        start();
     }
 
     public void run(int port) throws IOException {
         server.bind(new InetSocketAddress(port), 0);
-        server.setExecutor(null);
-        try {
-            loadControllers();
-            server.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        start();
     }
 
-    private void loadControllers() throws Exception {
+    private void start() {
+        server.setExecutor(null);
+        loadControllers();
+        server.start();
+    }
 
-        Reflections refs = new Reflections("ru.pavel_zhukoff.controller"); // TODO: Закинуть это в настройки
+    private void loadControllers() {
+        Reflections refs = new Reflections(Config.getProperty("controller.package"));
         Set<Class<?>> controllers = refs.getTypesAnnotatedWith(Controller.class);
         for (Class<?> controller: controllers) {
             server.createContext(controller.getAnnotation(Controller.class).baseUrl(),
