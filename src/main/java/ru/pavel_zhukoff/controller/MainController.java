@@ -13,7 +13,7 @@ public class MainController {
     @RequestMapping
     public Page index() {
         Map<String, Object> data = new HashMap<>();
-        data.put("Name", "Pasha");
+        data.put("name", "Pasha");
         return new Page("indexTemplate", data);
     }
 }

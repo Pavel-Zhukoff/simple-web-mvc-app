@@ -1,5 +1,6 @@
 package ru.pavel_zhukoff;
 
+import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -17,15 +18,12 @@ public class Page {
     }
 
     public Page(String templateName, Map<String, Object> data) {
-        URL url = Thread
-                .currentThread()
-                .getContextClassLoader()
-                .getResource(Config.getProperty("template.directory") + File.separatorChar + templateName + ".ftl");
-        System.out.println(url);
         Configuration cfg = new Configuration(Configuration.VERSION_2_3_29);
         try {
-            FileTemplateLoader templateLoader = new FileTemplateLoader(new File(url.getFile()));
-            cfg.setTemplateLoader(templateLoader);
+            cfg.setClassLoaderForTemplateLoading(
+                    Thread.currentThread().getContextClassLoader(),
+                    Config.getProperty("template.directory")
+            );
             Template template = cfg.getTemplate(templateName + ".ftl");
             Writer out = new StringWriter();
             try {
