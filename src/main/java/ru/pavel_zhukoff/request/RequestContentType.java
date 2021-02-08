@@ -1,18 +1,16 @@
 package ru.pavel_zhukoff.request;
 
-import ru.pavel_zhukoff.request.adapter.JsonAdapter;
 import ru.pavel_zhukoff.request.adapter.MultipartAdapter;
 import ru.pavel_zhukoff.request.adapter.QueryAdapter;
 
-public enum PostContentType {
-    JSON("application/json", new JsonAdapter()),
+public enum RequestContentType {
     MULTIPART("multipart/form-data", new MultipartAdapter()),
     URLENCODED("application/x-www-form-urlencoded", new QueryAdapter());
 
     private String name;
     private RequestParserAdapter adapter;
 
-    PostContentType(String name, RequestParserAdapter adapter) {
+    RequestContentType(String name, RequestParserAdapter adapter) {
         this.name = name;
         this.adapter = adapter;
     }

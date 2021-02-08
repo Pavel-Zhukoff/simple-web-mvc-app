@@ -15,7 +15,7 @@ public class MultipartAdapter implements RequestParserAdapter {
         if (query == null) {
             return params;
         }
-        Pattern querySplitPattern = Pattern.compile("------WebKitFormBoundary");
+        Pattern querySplitPattern = Pattern.compile(query.split("\r\n")[0]);
         String[] parts = querySplitPattern.split(query);
         for (int i = 1; i < parts.length-1; i++) {
             Pattern keyPattern = Pattern.compile("name=\"(.*)\"\r\n");

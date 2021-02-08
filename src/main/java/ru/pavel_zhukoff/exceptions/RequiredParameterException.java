@@ -1,11 +1,11 @@
 package ru.pavel_zhukoff.exceptions;
 
-public class NoSuchNotNullParameter extends Exception {
-    public NoSuchNotNullParameter() {
+public class RequiredParameterException extends Exception {
+    public RequiredParameterException() {
         super();
     }
 
-    public NoSuchNotNullParameter(String message) {
+    public RequiredParameterException(String message) {
         super(message);
     }
 

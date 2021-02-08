@@ -1,9 +1,8 @@
 package ru.pavel_zhukoff.request;
 
-import ru.pavel_zhukoff.annotations.RequestParam;
 import ru.pavel_zhukoff.annotations.form.FormItem;
 import ru.pavel_zhukoff.annotations.form.NotNull;
-import ru.pavel_zhukoff.exceptions.NoSuchNotNullParameter;
+import ru.pavel_zhukoff.exceptions.RequiredParameterException;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -31,7 +30,7 @@ public class ParamFactory {
             } catch (NoSuchMethodException
                     | IllegalAccessException
                     | InvocationTargetException
-                    | NoSuchNotNullParameter
+                    | RequiredParameterException
                     | InstantiationException e) {
                 e.printStackTrace();
             }
@@ -49,7 +48,7 @@ public class ParamFactory {
             , IllegalAccessException
             , InvocationTargetException
             , InstantiationException
-            , NoSuchNotNullParameter {
+            , RequiredParameterException {
         Object obj = clazz.getConstructor(null).newInstance(null);
         for (Field field: clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(FormItem.class)) {
@@ -66,7 +65,7 @@ public class ParamFactory {
                     if (params.containsKey(fieldName) && !params.get(fieldName).equals("")) {
                         field.set(obj, ValueParser.parseValue(field.getType().getTypeName(), params.get(fieldName)));
                     } else {
-                        throw new NoSuchNotNullParameter("Form: "
+                        throw new RequiredParameterException("Form: "
                                 + clazz.getName() + " parameter "
                                 + field.getName() + " not found in request!");
                     }

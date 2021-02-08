@@ -11,8 +11,8 @@ public class RequestParams {
             RequestParserAdapter rpa = new QueryAdapter();
             return rpa.parse(query);
         } else {
-            for (PostContentType pct: PostContentType.values()) {
-                if (pct.getName().equals(contentType)) {
+            for (RequestContentType pct: RequestContentType.values()) {
+                if (pct.getName().equals(contentType.split("; ")[0])) {
                     return pct.getAdapter().parse(query);
                 }
             }
