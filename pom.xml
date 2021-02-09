@@ -28,6 +28,11 @@
             <artifactId>freemarker</artifactId>
             <version>2.3.29</version>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.18</version>
+        </dependency>
     </dependencies>
 
     <properties>
