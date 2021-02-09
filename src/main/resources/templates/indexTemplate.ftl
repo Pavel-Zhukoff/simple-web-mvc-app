@@ -9,5 +9,9 @@
 </head>
 <body>
 <h1>Hello, ${name}</h1>
+<h2>Цитаты ${name}:</h2>
+<#list quotes as quote>
+    <p>Однажды <b>${name}</b> сказал: "${quote}"</p>
+</#list>
 </body>
 </html>
